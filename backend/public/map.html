@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nearby Cooking Stores</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <style>
+        #map {
+            height: 520px;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen flex flex-col items-center p-6">
+
+    <header class="w-full bg-white border-b shadow-sm">
+        <div class="max-w-6xl mx-auto px-6 py-3 flex justify-between items-center">
+
+            <!-- Logo -->
+            <div class="flex items-center gap-2">
+                <div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+                    <img src="./logo.jpg" alt="">
+                </div>
+                <span class="font-bold text-lg">What'sInMyFridge</span>
+            </div>
+
+            <!-- Links -->
+            <nav class="flex gap-6 text-sm font-medium">
+                <a href="/home.html" class="hover:text-green-500">Home</a>
+                <a href="/search.html" class="hover:text-green-500">Search</a>
+                <a href="/map.html" class="text-green-500 font-bold">Map</a>
+                <a href="/recommendations.html" class="hover:text-green-500">Favourite</a>
+            </nav>
+
+        </div>
+    </header>
+
+    <h1 class="text-3xl font-bold mb-6 text-center">
+        Find Nearby Cooking Stores
+    </h1>
+
+    <!-- Controls -->
+    <div class="w-full max-w-2xl flex flex-col sm:flex-row gap-3 mb-6">
+
+        <input
+            id="locationInput"
+            type="text"
+            placeholder="Enter location (e.g. Delhi, Mumbai)"
+            class="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-green-500 outline-none"
+        />
+
+        <button
+            id="searchBtn"
+            class="bg-green-500 text-white px-5 py-3 rounded-lg font-semibold hover:bg-green-600"
+        >
+            Search
+        </button>
+
+        <button
+            id="currentLocationBtn"
+            class="bg-blue-500 text-white px-5 py-3 rounded-lg font-semibold hover:bg-blue-600"
+        >
+            📍 My Location
+        </button>
+    </div>
+
+    <!-- Map -->
+    <div class="w-full max-w-5xl">
+        <div id="map"></div>
+    </div>
+
+<script>
+let map = L.map('map').setView([20.5937, 78.9629], 5);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+}).addTo(map);
+
+let markers = [];
+
+// Clear markers
+function clearMarkers() {
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+}
+
+// Geocode
+async function getCoordinates(place) {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${place}`);
+    const data = await res.json();
+
+    if (!data.length) {
+        alert("Location not found");
+        return null;
+    }
+
+    return {
+        lat: parseFloat(data[0].lat),
+        lon: parseFloat(data[0].lon)
+    };
+}
+
+// Fetch ALL cooking-related stores
+async function getStores(lat, lon) {
+    const query = `
+        [out:json];
+        (
+            node["shop"="supermarket"](around:5000, ${lat}, ${lon});
+            node["shop"="convenience"](around:5000, ${lat}, ${lon});
+            node["shop"="grocery"](around:5000, ${lat}, ${lon});
+            node["shop"="greengrocer"](around:5000, ${lat}, ${lon});
+            node["shop"="bakery"](around:5000, ${lat}, ${lon});
+            node["shop"="butcher"](around:5000, ${lat}, ${lon});
+            node["shop"="dairy"](around:5000, ${lat}, ${lon});
+            node["shop"="mall"](around:5000, ${lat}, ${lon});
+            node["amenity"="marketplace"](around:5000, ${lat}, ${lon});
+        );
+        out;
+    `;
+
+    const res = await fetch("https://overpass-api.de/api/interpreter", {
+        method: "POST",
+        body: query
+    });
+
+    return res.json();
+}
+
+// Color mapping
+function getColor(type) {
+    switch(type) {
+        case "supermarket": return "blue";
+        case "convenience": return "orange";
+        case "grocery": return "cyan";
+        case "greengrocer": return "green";
+        case "bakery": return "brown";
+        case "butcher": return "red";
+        case "dairy": return "pink";
+        case "mall": return "purple";
+        case "marketplace": return "black";
+        default: return "gray";
+    }
+}
+
+// Show stores
+async function showStores(lat, lon, label="📍 Location") {
+    clearMarkers();
+
+    map.setView([lat, lon], 14);
+
+    const userMarker = L.marker([lat, lon])
+        .addTo(map)
+        .bindPopup(label)
+        .openPopup();
+
+    markers.push(userMarker);
+
+    const data = await getStores(lat, lon);
+
+    if (!data.elements.length) {
+        alert("No stores found nearby");
+        return;
+    }
+
+    data.elements.forEach(place => {
+        const name = place.tags?.name || "Store";
+        const type = place.tags.shop || place.tags.amenity || "shop";
+
+        const marker = L.circleMarker([place.lat, place.lon], {
+            radius: 7,
+            color: getColor(type),
+            fillOpacity: 0.8
+        })
+        .addTo(map)
+        .bindPopup(`
+            <b>${name}</b><br>
+            Type: ${type}
+        `);
+
+        markers.push(marker);
+    });
+}
+
+// Search button
+document.getElementById("searchBtn").onclick = async () => {
+    const place = document.getElementById("locationInput").value.trim();
+
+    if (!place) {
+        alert("Enter a location");
+        return;
+    }
+
+    const coords = await getCoordinates(place);
+    if (!coords) return;
+
+    showStores(coords.lat, coords.lon, `📍 ${place}`);
+};
+
+// Current location
+document.getElementById("currentLocationBtn").onclick = () => {
+
+    if (!navigator.geolocation) {
+        alert("Geolocation not supported");
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const lat = pos.coords.latitude;
+            const lon = pos.coords.longitude;
+
+            showStores(lat, lon, "📍 Your Location");
+        },
+        () => {
+            alert("Location permission denied");
+        }
+    );
+};
+</script>
+
+</body>
+</html>

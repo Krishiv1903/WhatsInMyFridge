@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Favourite Recipes</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+    <style>
+        body {
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .bg-primary {
+            background-color: #22c55e;
+        }
+
+        .text-primary {
+            color: #22c55e;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+    <header class="sticky top-0 bg-white border-b border-slate-200 shadow-sm">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <img src="./logo.jpg" alt="Logo" class="w-10 h-10 rounded-lg" />
+                <div>
+                    <h2 class="text-xl font-bold tracking-tight">What's in My Fridge</h2>
+                </div>
+            </div>
+            <nav class="flex flex-wrap items-center gap-4 text-sm font-medium text-slate-700">
+                <a href="./home.html" class="hover:text-primary">Home</a>
+                <a href="./search.html" class="hover:text-primary">Search</a>
+                <a href="./map.html" class="hover:text-primary">Map</a>
+                <a href="./recommendations.html" class="text-primary font-semibold">Favourite</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-6">
+        <section class="mb-8">
+            <h2 class="text-3xl font-bold mb-2">Your Favourite Recipes</h2>
+            <p class="text-slate-600">Recipes you saved while searching. Sign in and save more to keep them here.</p>
+        </section>
+
+        <div id="favoritesContainer" class="grid gap-6 md:grid-cols-2 xl:grid-cols-3"></div>
+        <div id="emptyState" class="rounded-3xl border border-dashed border-slate-300 bg-white/70 p-10 text-center text-slate-600 hidden">
+            <p class="text-xl font-semibold mb-2">No favourite recipes yet.</p>
+            <p class="max-w-xl mx-auto">Start a search and tap the heart icon on any recipe to save it here.</p>
+        </div>
+
+        <div class="mt-8 text-center">
+            <button id="similarBtn" class="bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-opacity-90 transition">Get Similar Recommendations</button>
+        </div>
+
+        <section id="similarSection" class="mt-12 hidden">
+            <h2 class="text-3xl font-bold mb-6">Similar Recipes You Might Like</h2>
+            <div id="similarContainer" class="grid gap-6 md:grid-cols-2 xl:grid-cols-3"></div>
+        </section>
+    </main>
+
+    <script>
+        const container = document.getElementById('favoritesContainer');
+        const emptyState = document.getElementById('emptyState');
+
+        async function loadFavorites() {
+            const email = localStorage.getItem('currentUserEmail');
+            if (!email) {
+                container.innerHTML = '<div class="col-span-full rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-600">Please sign in to view your favourite recipes.</div>';
+                emptyState.classList.add('hidden');
+                return;
+            }
+
+            const response = await fetch(`/api/search/favorites?email=${encodeURIComponent(email)}`);
+            if (!response.ok) {
+                container.innerHTML = '<div class="col-span-full rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-600">Unable to load favourites. Try refreshing.</div>';
+                return;
+            }
+
+            const { favorites } = await response.json();
+            if (!favorites || favorites.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            container.innerHTML = favorites.map(recipe => `
+                <article class="rounded-3xl overflow-hidden shadow-sm border border-slate-200 bg-white">
+                    <div class="h-56 bg-slate-200 overflow-hidden">
+                        <img src="${recipe.imageURL || 'https://via.placeholder.com/540x320?text=Recipe'}" alt="${recipe.name}" class="w-full h-full object-cover" />
+                        
+                    </div>
+                    <div class="p-6 flex flex-col gap-3">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <p class="text-slate-500 text-xs uppercase tracking-[0.2em]">${recipe.cuisine || 'Cuisine'}</p>
+                                <h3 class="text-xl font-semibold leading-tight">${recipe.name}</h3>
+                                
+                            </div>
+                            
+                            
+                        </div>
+                        <p class="text-sm text-slate-600">Diet: ${recipe.diet || 'N/A'} • Missing: ${recipe.missingCount || 0}</p>
+                        <div class="mt-3 flex flex-wrap gap-3">
+                            <a href="/api/search/recipe/${encodeURIComponent(recipe.name)}" class="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-700 transition">View Recipe</a>
+                            <button type="button" data-name="${recipe.name}" class="remove-favorite-btn inline-flex items-center justify-center rounded-xl border border-red-500 text-red-500 bg-white px-4 py-3 text-sm font-semibold hover:bg-red-50 transition">Remove</button>
+                        </div>
+                    </div>
+                </article>
+            `).join('');
+            attachRemoveHandlers();
+        }
+
+        function attachRemoveHandlers() {
+            document.querySelectorAll('.remove-favorite-btn').forEach(button => {
+                button.addEventListener('click', async () => {
+                    const email = localStorage.getItem('currentUserEmail');
+                    if (!email) {
+                        alert('Please sign in to remove favourites.');
+                        return;
+                    }
+
+                    const recipeName = button.dataset.name;
+                    const response = await fetch('/api/search/favorite', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, recipeName }),
+                    });
+
+                    if (response.ok) {
+                        await loadFavorites();
+                    } else {
+                        alert('Unable to remove favourite. Please try again.');
+                    }
+                });
+            });
+        }
+
+        loadFavorites();
+
+        document.getElementById('similarBtn').addEventListener('click', async () => {
+            const email = localStorage.getItem('currentUserEmail');
+            if (!email) {
+                alert('Please sign in to get recommendations.');
+                return;
+            }
+
+            const response = await fetch(`/api/search/similar?email=${encodeURIComponent(email)}`);
+            if (!response.ok) {
+                alert('Unable to load similar recipes.');
+                return;
+            }
+
+            const { similar } = await response.json();
+            const similarContainer = document.getElementById('similarContainer');
+            const similarSection = document.getElementById('similarSection');
+
+            if (!similar || similar.length === 0) {
+                similarContainer.innerHTML = '<p class="col-span-full text-center text-slate-600">No similar recipes found.</p>';
+            } else {
+                similarContainer.innerHTML = similar.map(recipe => `
+                    <article class="rounded-3xl overflow-hidden shadow-sm border border-slate-200 bg-white">
+                        <div class="h-56 bg-slate-200 overflow-hidden relative">
+                            <img src="${recipe.ImageURL || 'https://via.placeholder.com/540x320?text=Recipe'}" alt="${recipe.TranslatedRecipeName}" class="w-full h-full object-cover" />
+                            <button
+                            type="button"
+                            class="favorite-btn absolute top-3 right-3 w-10 h-10 rounded-full bg-white/90 dark:bg-[#1d2c1a] backdrop-blur shadow flex items-center justify-center text-slate-500 hover:text-red-500 transition-colors"
+                            data-name="${ recipe.TranslatedRecipeName }"
+                            data-image="${ recipe.ImageURL }"
+                            data-cuisine="${ recipe.Cuisine }"
+                            data-diet="${ recipe.Diet }"
+                            data-missing="${ recipe.missingCount }"
+                        >
+                            <span class="material-symbols-outlined">favorite</span>
+                        </button>
+                        </div>
+                        <div class="p-6 flex flex-col gap-3">
+                            <div>
+                                <p class="text-slate-500 text-xs uppercase tracking-[0.2em]">${recipe.Cuisine || 'Cuisine'}</p>
+                                <h3 class="text-xl font-semibold leading-tight">${recipe.TranslatedRecipeName}</h3>
+                            </div>
+                            <p class="text-sm text-slate-600">Diet: ${recipe.Diet || 'N/A'} • Course: ${recipe.Course || 'N/A'}</p>
+                            <a href="/api/search/recipe/${encodeURIComponent(recipe.TranslatedRecipeName)}" class="mt-3 inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-700 transition">View Recipe</a>
+                        </div>
+                    </article>
+                `).join('');
+            }
+
+            similarSection.classList.remove('hidden');
+        });
+    </script>
+    <script>
+            const favoriteButtons = document.querySelectorAll(".favorite-btn");
+            favoriteButtons.forEach(button => {
+                button.addEventListener("click", async (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const email = localStorage.getItem("currentUserEmail");
+                    if (!email) {
+                        alert("Please sign in to save favourite recipes.");
+                        return;
+                    }
+
+                    const recipe = {
+                        TranslatedRecipeName: button.dataset.name,
+                        ImageURL: button.dataset.image,
+                        Cuisine: button.dataset.cuisine,
+                        Diet: button.dataset.diet,
+                        ExtraIngredientsCount: button.dataset.missing,
+                    };
+
+                    const response = await fetch("/api/search/favorite", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email, recipe }),
+                    });
+
+                    if (response.ok) {
+                        button.classList.remove("text-slate-500");
+                        button.classList.add("text-red-500");
+                        alert("Recipe saved to favourites.");
+                    } else {
+                        alert("Could not save recipe. Please try again.");
+                    }
+                });
+            });
+        </script>
+</body>
+</html>

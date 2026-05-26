@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+        <title>ChefAI - Ingredient Search &amp; Discovery</title>
+        <!-- Tailwind CSS -->
+        <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+        <!-- Google Fonts: Space Grotesk -->
+        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+        <!-- Material Symbols Outlined -->
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+        <script id="tailwind-config">
+            tailwind.config = {
+                darkMode: "class",
+                theme: {
+                    extend: {
+                        colors: {
+                            "primary": "#13ec13",
+                            "background-light": "#f6f8f6",
+                            "background-dark": "#102210",
+                        },
+                        fontFamily: {
+                            "display": ["Space Grotesk", "sans-serif"]
+                        },
+                        borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                    },
+                },
+            }
+        </script>
+        <style>
+            body {
+                font-family: "Space Grotesk", sans-serif;
+            }
+            .custom-scrollbar::-webkit-scrollbar {
+                width: 6px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #dbe6db;
+                border-radius: 10px;
+            }
+        </style>
+    </head>
+    <body class="bg-background-light dark:bg-background-dark text-[#111811] dark:text-white antialiased min-h-screen">
+        <div class="flex flex-col min-h-screen">
+        <!-- Top Navigation Bar -->
+            <header class="sticky top-0 z-50 bg-white dark:bg-[#1a2e1a] border-b border-solid border-[#dbe6db] dark:border-[#2a3e2a] px-6 lg:px-12 py-3">
+                <div class="max-w-[1440px] mx-auto flex items-center justify-between gap-8">
+                    <div class="flex items-center gap-8">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-[#111811]">
+                                <span class="material-symbols-outlined text-2xl font-bold">restaurant_menu</span>
+                            </div>
+                            <h2 class="text-[#111811] dark:text-white text-xl font-bold leading-tight tracking-tight">
+                                ChefAI
+                            </h2>
+                        </div>
+
+                        <nav class="hidden md:flex items-center gap-8">
+                            <a class="text-[#111811] dark:text-gray-300 text-sm font-medium hover:text-primary transition-colors" href="#">
+                                Dashboard
+                            </a>
+                            <a class="text-primary text-sm font-bold border-b-2 border-primary pb-1" href="#">
+                                Recipes
+                            </a>
+                            <a class="text-[#111811] dark:text-gray-300 text-sm font-medium hover:text-primary transition-colors" href="#">
+                                Grocery List
+                            </a>
+                            <a class="text-[#111811] dark:text-gray-300 text-sm font-medium hover:text-primary transition-colors" href="#">
+                                Community
+                            </a>
+                        </nav>
+                    </div>
+
+                    <div class="flex flex-1 justify-end items-center gap-6">
+                        <label class="hidden sm:flex flex-col w-full max-w-xs relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#618961] material-symbols-outlined">
+                                search
+                            </span>
+                            <input
+                                class="w-full h-10 pl-10 pr-4 rounded-lg border-none bg-[#f0f4f0] dark:bg-[#233823] text-[#111811] dark:text-white placeholder:text-[#618961] focus:ring-2 focus:ring-primary"
+                                placeholder="Search saved recipes..."
+                            />
+                        </label>
+
+                        <div class="flex items-center gap-4">
+                            <button class="relative p-2 text-[#111811] dark:text-white">
+                                <span class="material-symbols-outlined">notifications</span>
+                                <span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
+                            </button>
+
+                            <div class="w-10 h-10 rounded-full border-2 border-primary overflow-hidden">
+                                <img
+                                    class="w-full h-full object-cover"
+                                    data-alt="User profile avatar portrait"
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAc-Er4EvBPoiY-7otGLAfPL-bu62m19Ie4redfhDdoF2nHX5Tb0H91mYuXOjEWHrHIJIpuI_2F4VQ2C3exDS_jPlJjvz0qhz-XJ3hyTduK5BtAXjxUxc_dseuflVdyUiRmBcgCg8QS0Vi-cEoUYNSvCL02slXfrVn1ODCMxLSRdK6voaz2wHGX6WZ3HmAitc6s-7SMuoM-JhDOJpzaJTigfIDzp1ZigEGUohLjoGNRguE99Z_m5D95YSdOodaLkEiHB-LI9Qchvw"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="flex-1 max-w-[1440px] mx-auto w-full flex flex-col md:flex-row gap-6 p-6 lg:px-12">
+                <!-- Left Sidebar: Filters & Inputs -->
+                <aside class="w-full md:w-[320px] shrink-0">
+                    <div class="sticky top-24 flex flex-col gap-6">
+                        <!-- Your Pantry Section -->
+                        <div class="bg-white dark:bg-[#1a2e1a] rounded-xl p-5 shadow-sm border border-[#dbe6db] dark:border-[#2a3e2a]">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 class="text-lg font-bold text-[#111811] dark:text-white">Your Pantry</h3>
+                                    <p class="text-xs text-[#618961]">Add ingredients you have</p>
+                                </div>
+                                <button class="text-xs text-primary font-bold hover:underline">Clear All</button>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <div class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 text-[#111811] dark:text-primary text-sm font-medium border border-primary/20">
+                                    <span>Chicken</span>
+                                    <span class="material-symbols-outlined text-sm cursor-pointer">close</span>
+                                </div>
+
+                                <div class="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 text-[#111811] dark:text-primary text-sm font-medium border border-primary/20">
+                                    <span>Garlic</span>
+                                    <span class="material-symbols-outlined text-sm cursor-pointer">close</span>
+                                </div>
+                            </div>
+
+                            <div class="relative">
+                                <input
+                                    class="w-full h-12 px-4 rounded-lg border border-[#dbe6db] dark:border-[#2a3e2a] dark:bg-[#233823] text-sm focus:ring-2 focus:ring-primary outline-none"
+                                    placeholder="Add ingredient (e.g. Onion)"
+                                />
+                                <button class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-[#618961]">
+                                    <span class="material-symbols-outlined">add_circle</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Refine Search Section -->
+                        <div class="bg-white dark:bg-[#1a2e1a] rounded-xl p-5 shadow-sm border border-[#dbe6db] dark:border-[#2a3e2a] flex flex-col gap-6">
+                            <h3 class="text-lg font-bold text-[#111811] dark:text-white">Refine Search</h3>
+
+                            <!-- Missing Ingredients Slider -->
+                            <div class="flex flex-col gap-3">
+                                <div class="flex justify-between items-center">
+                                    <label class="text-sm font-medium text-[#111811] dark:text-white">
+                                        Max Missing Items
+                                    </label>
+                                </div>
+
+                                <input
+                                    class="w-full h-11 px-3 rounded-lg border border-[#dbe6db] dark:border-[#2a3e2a] dark:bg-[#233823] text-sm focus:ring-2 focus:ring-primary outline-none"
+                                    type="number"
+                                />
+                            </div>
+
+                            <!-- Cuisine Type -->
+                            <div class="flex flex-col gap-3">
+                                <label class="text-sm font-medium text-[#111811] dark:text-white">
+                                    Cuisine Preference
+                                </label>
+                                <select
+                                    class="w-full h-11 px-3 rounded-lg border border-[#dbe6db] dark:border-[#2a3e2a] dark:bg-[#233823] text-sm focus:ring-2 focus:ring-primary outline-none appearance-none"
+                                >
+                                    <option>Any Cuisine</option>
+                                    <option>Italian</option>
+                                    <option>Asian Fusion</option>
+                                    <option>Mediterranean</option>
+                                    <option>Mexican</option>
+                                </select>
+                            </div>
+
+                            <!-- Meal Type -->
+                            <div class="flex flex-col gap-3">
+                                <label class="text-sm font-medium text-[#111811] dark:text-white">
+                                    Meal Type
+                                </label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button class="px-3 py-2 rounded-lg border border-primary bg-primary/10 text-xs font-bold text-[#111811] dark:text-primary">
+                                        Dinner
+                                    </button>
+                                    <button class="px-3 py-2 rounded-lg border border-[#dbe6db] dark:border-[#2a3e2a] text-xs font-medium text-[#618961] hover:border-primary transition-all">
+                                        Lunch
+                                    </button>
+                                    <button class="px-3 py-2 rounded-lg border border-[#dbe6db] dark:border-[#2a3e2a] text-xs font-medium text-[#618961] hover:border-primary transition-all">
+                                        Breakfast
+                                    </button>
+                                    <button class="px-3 py-2 rounded-lg border border-[#dbe6db] dark:border-[#2a3e2a] text-xs font-medium text-[#618961] hover:border-primary transition-all">
+                                        Snack
+                                    </button>
+                                    <button class="px-3 py-2 rounded-lg border border-[#dbe6db] dark:border-[#2a3e2a] text-xs font-medium text-[#618961] hover:border-primary transition-all">
+                                        Veg
+                                    </button>
+                                    <button class="px-3 py-2 rounded-lg border border-[#dbe6db] dark:border-[#2a3e2a] text-xs font-medium text-[#618961] hover:border-primary transition-all">
+                                        Non-veg
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button class="w-full bg-primary hover:bg-[#11d811] text-[#111811] font-bold py-4 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-transform active:scale-95">
+                                <span class="material-symbols-outlined">auto_awesome</span>
+                                Generate Recipes
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Right Content Area: Results -->
+                <section class="flex-1 flex flex-col gap-6">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-[#111811] dark:text-white">
+                                AI Recommended Recipes
+                            </h2>
+                            <p class="text-[#618961] text-sm">
+                                Based on your available ingredients (Chicken, Garlic, Spinach, Olive Oil)
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Recipe Grid -->
+                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                        <!-- Recipe Card 1 -->
+                        <div class="bg-white dark:bg-[#1a2e1a] rounded-2xl overflow-hidden shadow-md border border-[#dbe6db] dark:border-[#2a3e2a] flex flex-col group hover:shadow-xl transition-shadow">
+                            <div class="relative h-48">
+                                <img
+                                    class="w-full h-full object-cover"
+                                    data-alt="Garlic butter chicken with spinach dish"
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDch1ELLHOdS316W5JvxEzrdPD9nbRBrLLDw8hwfc5mZoB1VoJhHnJJvRH65BUEN2vP-lo7c1nivXzxFLyQFo8Cy_LFGFELTnE7-ijCLrX_sIWjJL7T6KWf32dBX9I0paz5b8D-SMVYpKxrEGgQI_Jc-nn1r6TzaTZLc_qZdi_d_jyCLTuCBfYSbBnKeOwWwtZDmbKBX0-4HKbGw9Bi-k9S5j9a-Q8zSlwoAfaVn12fC3P6Goi-8nds2Td_ATf7gbATr4nQc72VLQ"
+                                />
+                                <div class="absolute top-4 left-4 bg-primary text-[#111811] text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded">
+                                    90% Match
+                                </div>
+                                <button class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/90 backdrop-blur shadow flex items-center justify-center text-red-500">
+                                    <span class="material-symbols-outlined">favorite</span>
+                                </button>
+                            </div>
+
+                            <div class="p-6 flex-1 flex flex-col">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h3 class="text-xl font-bold text-[#111811] dark:text-white group-hover:text-primary transition-colors">
+                                        Creamy Garlic Chicken &amp; Spinach
+                                    </h3>
+                                    <div class="flex items-center gap-1 text-[#618961]">
+                                        <span class="material-symbols-outlined text-sm">schedule</span>
+                                        <span class="text-xs font-medium">25 min</span>
+                                    </div>
+                                </div>
+
+                                <div class="flex-1">
+                                    <div class="mb-4">
+                                        <p class="text-[10px] font-bold text-[#618961] uppercase tracking-wider mb-2">
+                                            Ingredients You Have
+                                        </p>
+                                        <div class="flex flex-wrap gap-2">
+                                            <span class="text-xs text-[#111811] dark:text-gray-300 flex items-center gap-1 bg-primary/10 px-2 py-1 rounded">
+                                                <span class="material-symbols-outlined text-[14px] text-primary">check_circle</span>
+                                                Chicken
+                                            </span>
+                                            <span class="text-xs text-[#111811] dark:text-gray-300 flex items-center gap-1 bg-primary/10 px-2 py-1 rounded">
+                                                <span class="material-symbols-outlined text-[14px] text-primary">check_circle</span>
+                                                Garlic
+                                            </span>
+                                            <span class="text-xs text-[#111811] dark:text-gray-300 flex items-center gap-1 bg-primary/10 px-2 py-1 rounded">
+                                                <span class="material-symbols-outlined text-[14px] text-primary">check_circle</span>
+                                                Spinach
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-6">
+                                        <p class="text-[10px] font-bold text-red-500 uppercase tracking-wider mb-2">
+                                            Need to Buy (1 Item)
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <button class="w-full py-3 border-2 border-[#dbe6db] dark:border-[#2a3e2a] text-[#111811] dark:text-white rounded-xl font-bold hover:bg-primary hover:border-primary hover:text-[#111811] transition-all flex items-center justify-center gap-2">
+                                    View Recipe Instructions
+                                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+            <!-- Footer -->
+            <footer class="bg-white dark:bg-[#1a2e1a] border-t border-[#dbe6db] dark:border-[#2a3e2a] py-8 px-6 lg:px-12 mt-auto">
+                <div class="max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">restaurant</span>
+                        <span class="font-bold text-[#111811] dark:text-white">What's In My Fridge</span>
+                        <span class="text-[#618961] text-sm ml-4">© 2026 All Rights Reserved</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+        <title>What's in My Fridge</title>
+        <!-- Tailwind CSS -->
+        <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+        <!-- Google Fonts: Space Grotesk -->
+        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+        <!-- Material Symbols Outlined -->
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+        <script id="tailwind-config">
+            tailwind.config = {
+                darkMode: "class",
+                theme: {
+                    extend: {
+                        colors: {
+                            "primary": "#13ec13",
+                            "background-light": "#f6f8f6",
+                            "background-dark": "#102210",
+                        },
+                        fontFamily: {
+                            "display": ["Space Grotesk", "sans-serif"]
+                        },
+                        borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                    },
+                },
+            }
+        </script>
+        <style>
+            body {
+                font-family: "Space Grotesk", sans-serif;
+            }
+            .custom-scrollbar::-webkit-scrollbar {
+                width: 6px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #dbe6db;
+                border-radius: 10px;
+            }
+        </style>
+    </head>
+    <body class="bg-background-light dark:bg-background-dark text-[#111811] dark:text-white antialiased min-h-screen">
+        <div class="flex flex-col min-h-screen">
+        <!-- Top Navigation Bar -->
+            <header class="sticky top-0 z-50 bg-white dark:bg-[#1a2e1a] border-b border-solid border-[#dbe6db] dark:border-[#2a3e2a] px-6 lg:px-12 py-3">
+                <div class="flex items-center justify-between max-w-[1280px] mx-auto">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-[#111811]">
+                            <img src="./logo.jpg" alt="">
+                        </div>
+                        <h2 class="text-[#111811] dark:text-white text-xl font-bold leading-tight tracking-tight">
+                            What's in My Fridge
+                        </h2>
+                    </div>
+
+                    <nav class="hidden md:flex items-center gap-8">
+                        <a class="text-[#111811] dark:text-gray-300 text-sm font-medium hover:text-primary transition-colors" href="/home.html">
+                            Home
+                        </a>
+                        <a class="text-[#111811] dark:text-gray-300 text-sm font-medium hover:text-primary transition-colors" href="/search.html">
+                            Search
+                        </a>
+                        <a class="text-[#111811] dark:text-gray-300 text-sm font-medium hover:text-primary transition-colors" href="/map.html">
+                            Map
+                        </a>
+                        <a class="text-[#111811] dark:text-gray-300 text-sm font-medium hover:text-primary transition-colors" href="/recommendations.html">
+                            Favourite
+                        </a>
+                    </nav>
+                </div>
+            </header>
+
+            <main class="flex-1 max-w-[1440px] mx-auto w-full flex flex-col md:flex-row gap-6 p-6 lg:px-12">
+                <!-- Left Sidebar: Filters & Inputs -->
+                <aside class="w-full md:w-[320px] shrink-0">
+                    <div class="sticky top-24 flex flex-col gap-6">
+                        <!-- Your Pantry Section -->
+                        <div class="bg-white dark:bg-[#1a2e1a] rounded-xl p-5 shadow-sm border border-[#dbe6db] dark:border-[#2a3e2a]">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 class="text-lg font-bold text-[#111811] dark:text-white">Your Pantry</h3>
+                                    <p class="text-xs text-[#618961]">Add ingredients you have</p>
+                                </div>
+                                <button 
+                                    id="clearPantryBtn"
+                                    class="text-xs text-primary font-bold hover:underline"
+                                    type="button"
+                                >Clear All</button>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2 mb-4" id="pantryList">
+                            </div>
+
+                            <div class="relative">
+                                <input
+                                    id="ingredientInput"
+                                    class="w-full h-12 px-4 rounded-lg border border-[#dbe6db] dark:border-[#2a3e2a] dark:bg-[#233823] text-sm focus:ring-2 focus:ring-primary outline-none"
+                                    placeholder="Add ingredient (e.g. Onion)"
+                                />
+                                <button 
+                                    type="button"
+                                    id="addIngredientBtn"
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-[#618961]"
+                                    >
+                                    <span class="material-symbols-outlined">add_circle</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Refine Search Section -->
+                        <div class="bg-white dark:bg-[#1a2e1a] rounded-xl p-5 shadow-sm border border-[#dbe6db] dark:border-[#2a3e2a] flex flex-col gap-6">
+                            <h3 class="text-lg font-bold text-[#111811] dark:text-white">Refine Search</h3>
+
+                            <!-- Missing Ingredients Slider -->
+                            <div class="flex flex-col gap-3">
+                                <div class="flex justify-between items-center">
+                                    <label class="text-sm font-medium text-[#111811] dark:text-white">
+                                        Max Missing Items
+                                    </label>
+                                </div>
+                                <label class="text-sm font-medium text-[#111811] dark:text-white">
+                                <input 
+                                    title="Title" placeholder="1, 2, etc."   " 
+                                    class="w-full h-11 px-3 rounded-lg border border-[#dbe6db] dark:border-[#2a3e2a] dark:bg-[#233823] text-sm focus:ring-2 focus:ring-primary outline-none"
+                                    type="number"
+                                    id="maxMissingInput"
+                                    min="0"
+                                />
+                                </label>
+                            </div>
+
+                            <!-- Cuisine Type -->
+                            <div class="flex flex-col gap-3">
+                                <label class="text-sm font-medium text-[#111811] dark:text-white">
+                                    Cuisine Preference
+                                </label>
+                                <select
+                                    title="Title"
+                                    class="w-full h-11 px-3 rounded-lg border border-[#dbe6db] dark:border-[#2a3e2a] dark:bg-[#233823] text-sm focus:ring-2 focus:ring-primary outline-none appearance-none"
+                                    id="cuisineSelect"
+                                >
+                                    <option>Any Cuisine</option>
+                                    <option>Italian</option>
+                                    <option>Asian Fusion</option>
+                                    <option>Mediterranean</option>
+                                    <option>Mexican</option>
+                                </select>
+                            </div>
+
+                            <!-- Meal Type -->
+                            <div class="flex flex-col gap-3">
+                                <label class="text-sm font-medium text-[#111811] dark:text-white">
+                                    Meal Type
+                                </label>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button data-meal="Dinner" type="button" class="meal-btn px-3 py-2 rounded-lg border border-[#dbe6db] dark:border-[#2a3e2a] text-xs font-medium text-[#618961] hover:border-primary transition-all">
+                                        Dinner
+                                    </button>
+                                    <button data-meal="Lunch" type="button" class="meal-btn px-3 py-2 rounded-lg border border-[#dbe6db] dark:border-[#2a3e2a] text-xs font-medium text-[#618961] hover:border-primary transition-all">
+                                        Lunch
+                                    </button>
+                                    <button data-meal="Breakfast" type="button" class="meal-btn px-3 py-2 rounded-lg border border-[#dbe6db] dark:border-[#2a3e2a] text-xs font-medium text-[#618961] hover:border-primary transition-all">
+                                        Breakfast
+                                    </button>
+                                    <button data-meal="Snack" type="button" class="meal-btn px-3 py-2 rounded-lg border border-[#dbe6db] dark:border-[#2a3e2a] text-xs font-medium text-[#618961] hover:border-primary transition-all">
+                                        Snack
+                                    </button>
+                                    <button data-meal="Veg" type="button" class="meal-btn px-3 py-2 rounded-lg border border-[#dbe6db] dark:border-[#2a3e2a] text-xs font-medium text-[#618961] hover:border-primary transition-all">
+                                        Veg
+                                    </button>
+                                    <button data-meal="Non-Veg" type="button" class="meal-btn px-3 py-2 rounded-lg border border-[#dbe6db] dark:border-[#2a3e2a] text-xs font-medium text-[#618961] hover:border-primary transition-all">
+                                        Non-veg
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button 
+                                id="generateBtn"
+                                type="submit" 
+                                class="w-full bg-primary hover:bg-[#11d811] text-[#111811] font-bold py-4 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-transform active:scale-95"
+                            >
+                                <!-- <span class="material-symbols-outlined">auto_awesome</span> -->
+                                Get Recipes
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Right Content Area: Results -->
+                <section class="flex-1 flex flex-col gap-6">
+                    <div class="bg-white dark:bg-[#1a2e1a] rounded-xl p-5 shadow-sm border border-[#dbe6db] flex flex-col h-full">
+
+                        <h3 class="text-lg font-bold mb-4">AI Meal Planner 🤖</h3>
+
+                        <!-- Chat Display -->
+                        <div id="chatBox" class="flex-1 overflow-y-auto space-y-3 mb-4 max-h-[400px]"></div>
+
+                        <!-- Inputs -->
+                        <div class="space-y-2">
+
+                            <select id="planDays"  title="planDays" class="w-full h-10 rounded border px-2">
+                                <option value="1">1 Day Plan</option>
+                                <option value="7">7 Day Plan</option>
+                            </select>
+
+                            <input id="proteinInput" placeholder="Protein goal (g)" class="w-full h-10 rounded border px-2" />
+                            <input id="carbsInput" placeholder="Carbs goal (g)" class="w-full h-10 rounded border px-2" />
+                            <input id="allergyInput" placeholder="Allergies (e.g. nuts, dairy)" class="w-full h-10 rounded border px-2" />
+
+                            <button id="generateMealBtn"
+                                class="w-full bg-primary text-[#111811] font-bold py-3 rounded-lg">
+                                Generate Meal Plan
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </main>
+            <!-- Footer -->
+            <footer class="bg-white dark:bg-[#1a2e1a] border-t border-[#dbe6db] dark:border-[#2a3e2a] py-8 px-6 lg:px-12 mt-auto">
+                <div class="max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">restaurant</span>
+                        <span class="font-bold text-[#111811] dark:text-white">What's In My Fridge</span>
+                        <span class="text-[#618961] text-sm ml-4">© 2026 All Rights Reserved</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </body>
+    <script src="./js/search.js"></script>
+    <script>
+        const chatBox = document.getElementById("chatBox");
+
+        function addMessage(text, type="user") {
+            const div = document.createElement("div");
+
+            div.className = type === "user"
+                ? "bg-primary/20 p-3 rounded-lg text-sm"
+                : "bg-gray-200 dark:bg-[#233823] p-3 rounded-lg text-sm";
+
+            div.innerText = text;
+
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        document.getElementById("generateMealBtn").onclick = async () => {
+
+            const days = document.getElementById("planDays").value;
+            const protein = document.getElementById("proteinInput").value;
+            const carbs = document.getElementById("carbsInput").value;
+            const allergies = document.getElementById("allergyInput").value;
+
+            const payload = { days, protein, carbs, allergies };
+
+            addMessage(`Generate ${days}-day plan | Protein: ${protein}, Carbs: ${carbs}, Allergies: ${allergies}`);
+
+            const res = await fetch("/api/ai/meal-plan", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+
+            addMessage(data.plan, "ai");
+        };
+    </script>
+</html>
