@@ -1,8 +1,9 @@
-import axios from "axios";
+import axios from `axios`;
+const ML_SERVICE_URL = process.env.ML_SERVICE_URL;
 
 export const getRecommendations = async (ingredients) => {
     const response = await axios.post(
-        "http://localhost:5001/recommend",
+        `${ML_SERVICE_URL}/recommend`,
         { ingredients }
     );
 
@@ -11,7 +12,7 @@ export const getRecommendations = async (ingredients) => {
 
 export const getRecipe = async (name) => {
     const response = await axios.get(
-        `http://localhost:5001/recipe/${name}`
+        `${ML_SERVICE_URL}/recipe/${name}`
     );
 
     return response.data;
@@ -19,7 +20,7 @@ export const getRecipe = async (name) => {
 
 export const getSimilarRecipes = async (favoriteNames) => {
     const response = await axios.post(
-        "http://localhost:5001/similar",
+        `${ML_SERVICE_URL}/similar`,
         { favorite_names: favoriteNames }
     );
 
