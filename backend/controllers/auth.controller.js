@@ -1,12 +1,14 @@
 import { saveUser, validateUser, emailExists } from "../services/auth.service.js";
 
-export const signup =async (req, res) => {
-    const { username, email, password, confirmPassword} = req.body;
+export const signup = async (req, res) => {
+    const { username, email, password, confirmPassword } = req.body;
 
+    if (!username || !email || !password || !confirmPassword) {
+        return res.redirect("/signUp.html?error=required");
+    }
     if (password !== confirmPassword) {
         return res.redirect('/signUp.html?error=password');
     }
-    // If the exact credentials already exist, ask the user to sign in instead
     if (await emailExists(email)) {
         return res.redirect('/signUp.html?error=exists');
     }
@@ -18,15 +20,18 @@ export const signup =async (req, res) => {
 
 export const signin = async (req, res) => {
     const { email, password } = req.body;
+    if (!email || !password) {
+        return res.redirect("/signIn.html?error=invalid");
+    }
 
-    const isValid = validateUser(email, password);
+    const isValid = await validateUser(email, password);
 
     if (isValid) {
         return res.redirect("/home.html");
     }
 
     // If email not found, prompt user to sign up first
-    if (!emailExists(email)) {
+    if (!await emailExists(email)) {
         return res.redirect("/signIn.html?error=notfound");
     }
 

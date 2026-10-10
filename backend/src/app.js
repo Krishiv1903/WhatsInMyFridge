@@ -1,12 +1,11 @@
 import express from "express";
-import dotenv from "dotenv";
+import "dotenv/config";
 import authRoutes from "../routes/auth.routes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import searchRoutes from "../routes/search.routes.js";
 import aiRoutes from "../routes/ai.routes.js";
-
-dotenv.config();
+import errorHandler from "../middlewares/error.middleware.js";
 
 const app = express();
 
@@ -25,8 +24,14 @@ app.use("/api/auth", authRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/ai", aiRoutes);
 
+app.get("/health", (req, res) => {
+    res.json({ status: "ok" });
+});
+
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "../public/signUp.html"));
 });
+
+app.use(errorHandler);
 
 export default app;

@@ -1,10 +1,11 @@
 
 import { GoogleGenAI } from "@google/genai";
-import dotenv from "dotenv";
-dotenv.config();
 
-const ai = new GoogleGenAI({apiKey : "AIzaSyD2qK4oUixZNJaL_FMFzO031xLtGodsHvM"});
 export async function generatePlan({ days, protein, carbs, allergies }) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+        throw new Error("GEMINI_API_KEY is required to generate meal plans");
+    }
 
     const prompt = `
     Create a ${days}-day meal plan.
@@ -19,12 +20,15 @@ export async function generatePlan({ days, protein, carbs, allergies }) {
     Keep it simple and clean.
     `;
 
+    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: prompt,
     });
-    const text = response.candidates[0].content.parts[0].text;
+    const text = response.text;
+    if (!text) {
+        throw new Error("Gemini returned an empty meal plan");
+    }
     const cleaned = text.replace(/\*/g, "");
-    // console.log(text);
     return cleaned;
 }

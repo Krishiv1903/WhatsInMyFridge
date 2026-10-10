@@ -207,7 +207,7 @@
             passwordInput.addEventListener('blur', validatePassword);
             confirmPasswordInput.addEventListener('blur', validateConfirmPassword);
 
-            form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', async function(e) {
                 const emailValid = validateEmail();
                 const passwordValid = validatePassword();
                 const confirmValid = validateConfirmPassword();
@@ -220,7 +220,27 @@
                     return;
                 }
 
-                localStorage.setItem('currentUserEmail', emailInput.value.trim());
+                e.preventDefault();
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: new URLSearchParams(new FormData(form)),
+                    });
+                    if (!response.ok) {
+                        throw new Error(`Signup request failed with status ${response.status}`);
+                    }
+                    const destination = new URL(response.url);
+                    if (destination.pathname === '/home.html') {
+                        localStorage.setItem('currentUserEmail', emailInput.value.trim());
+                    }
+                    window.location.assign(destination.href);
+                } catch (error) {
+                    const signupError = document.getElementById('signupError');
+                    signupError.textContent = 'Unable to create your account. Please try again.';
+                    signupError.classList.remove('hidden');
+                    console.error('Signup request failed:', error);
+                }
             });
 
             // Show server-side signup error if present in query params
@@ -235,6 +255,11 @@
             if (params.get('error') === 'password') {
                 const signupError = document.getElementById('signupError');
                 signupError.innerText = 'Passwords do not match.';
+                signupError.classList.remove('hidden');
+            }
+            if (params.get('error') === 'required') {
+                const signupError = document.getElementById('signupError');
+                signupError.innerText = 'Please complete all required fields.';
                 signupError.classList.remove('hidden');
             }
         </script>

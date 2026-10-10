@@ -237,7 +237,7 @@
             emailInput.addEventListener('blur', validateEmail);
             passwordInput.addEventListener('blur', validatePassword);
 
-            form.addEventListener('submit', function(e) {
+            form.addEventListener('submit', async function(e) {
                 const emailValid = validateEmail();
                 const passwordValid = validatePassword();
 
@@ -248,7 +248,26 @@
                     return;
                 }
 
-                localStorage.setItem('currentUserEmail', emailInput.value.trim());
+                e.preventDefault();
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: new URLSearchParams(new FormData(form)),
+                    });
+                    if (!response.ok) {
+                        throw new Error(`Signin request failed with status ${response.status}`);
+                    }
+                    const destination = new URL(response.url);
+                    if (destination.pathname === '/home.html') {
+                        localStorage.setItem('currentUserEmail', emailInput.value.trim());
+                    }
+                    window.location.assign(destination.href);
+                } catch (error) {
+                    authError.textContent = 'Unable to sign in. Please try again.';
+                    authError.classList.remove('hidden');
+                    console.error('Signin request failed:', error);
+                }
             });
 
                     // Show server-side auth error if present in query params

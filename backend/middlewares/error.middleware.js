@@ -1,4 +1,4 @@
-module.exports = (err, req, res, next) => {
+export default (err, req, res, next) => {
     console.error(err);
-    res.status(500).json({msg: err.message});
-}
+    res.status(500).json({ message: "An unexpected server error occurred" });
+};

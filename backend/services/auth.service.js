@@ -50,6 +50,5 @@ export const getFavoriteRecipes = async (email) => {
 
 export const emailExists = async (email) => {
     const user = await User.findOne({ email });
-    console.log("Checking if email exists:", email, "Found user:", user);
     return !!user;
 };

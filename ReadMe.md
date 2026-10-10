@@ -1,240 +1,132 @@
-# WhatsInMyFridge 🍳🥗
+# What's In My Fridge
 
-An AI-powered food recommendation web application that suggests recipes based on the ingredients available in your fridge.
-The project combines a **React frontend**, **Node.js/Express backend**, and a **Python ML recommendation system** to provide intelligent meal suggestions.
+What's In My Fridge is a recipe discovery application built with an Express
+backend, static HTML/EJS pages, a Flask recommendation service, MongoDB Atlas,
+and Gemini-powered meal planning.
 
----
+## Features
 
-## 🚀 Features
+- Recommend recipes from ingredients in your pantry
+- Browse recipe details and filter recommendation results
+- Create an account, sign in, and save or remove favourite recipes
+- Find similar recipes based on saved favourites
+- Generate AI meal plans with dietary requirements and allergy information
 
-* 🥦 Ingredient-based recipe recommendations
-* 🤖 Machine Learning powered food suggestion engine
-* ⚡ Fast API communication between frontend, backend, and ML service
-* 📊 Clean and responsive UI
-* 🔍 Smart filtering and recommendation logic
-* 🌐 Full-stack architecture with scalable structure
+## Project layout
 
----
-
-# 🛠️ Tech Stack
-
-## Frontend
-
-* React.js
-* JavaScript
-* CSS
-
-## Backend
-
-* Node.js
-* Express.js
-
-## Machine Learning
-
-* Python
-* Pandas
-* Scikit-learn
-
----
-
-# 📂 Project Structure
-
-```bash
-WIMF
-│
-├── backend
-│   ├── config
-│   ├── controllers
-│   ├── middlewares
-│   ├── models
-│   ├── node_modules
-│   ├── public
-│   ├── routes
-│   ├── services
-│   ├── src
-│   │   ├── app.js
-│   │   └── server.js
-│   │
-│   ├── .env
-│   ├── .gitignore
-│   ├── package-lock.json
-│   └── package.json
-│
-├── ml
-│   ├── __pycache__
-│   ├── cleaned_indian_food_1.csv
-│   ├── ml_service.py
-│   ├── model_utils.py
-│   └── requirements.txt
-│
-├── package-lock.json
-├── package.json
-└── ReadMe.md
+```text
+backend/
+  config/              MongoDB connection
+  controllers/         Express request handlers
+  models/              Mongoose models
+  public/              HTML, browser JavaScript, images, and EJS views
+  routes/               Express API routes
+  services/             MongoDB, Gemini, and Flask integrations
+  src/                  Express application and server entry point
+ml/
+  cleaned_indian_food_1.csv
+  ml_service.py         Flask API
+  model_utils.py        Recommendation logic and dataset loading
+render.yaml             Render Blueprint for both web services
+.env.example            Local backend environment-variable template
 ```
 
----
+## Local development
 
-# ⚙️ Installation & Setup
+Prerequisites: Node.js 22 or newer, Python 3.12, and a MongoDB Atlas database.
 
-## 1️⃣ Clone the Repository
+1. Clone the repository and create a local backend environment file:
 
-```bash
-git clone https://github.com/Krishiv1903/WhatsInMyFridge.git
-cd WhatsInMyFridge
-```
+   ```powershell
+   git clone https://github.com/Krishiv1903/WhatsInMyFridge.git
+   cd WhatsInMyFridge
+   Copy-Item .env.example backend\.env
+   ```
 
----
+2. Edit `backend/.env` and set `MONGODB_URI` to your Atlas connection string.
+   Set `GEMINI_API_KEY` to enable AI meal planning. Do not commit this file.
 
-# 🔧 Backend Setup
+3. Install and start the Python service in one terminal from the repository
+   root:
 
-Move to backend folder:
+   ```powershell
+   py -3.12 -m venv .venv
+   .\.venv\Scripts\Activate.ps1
+   pip install -r ml\requirements.txt
+   python ml\ml_service.py
+   ```
 
-```bash
-cd backend
-```
+   The Flask service listens on `http://127.0.0.1:5001`. The CSV is loaded
+   relative to `ml_service.py`, so the service can also start from another
+   working directory.
 
-Install dependencies:
+4. Install and start the Node.js app in another terminal:
 
-```bash
-npm install
-```
+   ```powershell
+   cd backend
+   npm ci
+   npm start
+   ```
 
-Create a `.env` file:
+   Open `http://localhost:3000`. `ML_SERVICE_URL` in `backend/.env` defaults to
+   the local Flask URL shown above. MongoDB Atlas must allow network access from
+   your development machine.
 
-```env
-PORT=5000
-```
+## Deploy to Render
 
-Start backend server:
+The root `render.yaml` defines two Render web services:
 
-```bash
-npm start
-```
+- `whats-in-my-fridge-ml`: installs `ml/requirements.txt` and starts Flask with
+  Gunicorn on Render's assigned port.
+- `whats-in-my-fridge`: installs the backend lockfile, starts Express, and
+  serves the existing frontend and API from the same origin.
 
-or
+1. Create an Atlas database and database user with read/write access to the
+   application's database. In Atlas **Network Access**, allow connections from
+   Render. Render's free instances do not provide static outbound IPs; for a
+   free deployment, Atlas may need `0.0.0.0/0`. Use a strong, unique database
+   password and restrict access to known outbound IPs if your Render plan
+   provides static egress IPs.
+2. In Render, choose **New > Blueprint**, connect this GitHub repository, and
+   apply the root `render.yaml`.
+3. In the Node service's Environment settings, set these secret values:
 
-```bash
-npm run dev
-```
+   | Variable | Value |
+   | --- | --- |
+   | `MONGODB_URI` | Atlas connection string, including a database name and URL-encoded credentials |
+   | `GEMINI_API_KEY` | A valid Google Gemini API key |
 
----
+   The Blueprint sets `NODE_ENV`, `NODE_VERSION`, and the Flask URL
+   (`ML_SERVICE_URL`). Render supplies `PORT` to each service; do not set it
+   manually. The meal-planning endpoint returns an error until
+   `GEMINI_API_KEY` is configured, while signup, login, favourites, and recipe
+   recommendations need a working Atlas connection and both services deployed.
+4. Wait for both services to report healthy. Open the Node service's
+   `onrender.com` URL and test signup, login, ingredient search, recipe details,
+   favourites, and meal planning.
 
-# 🤖 ML Service Setup
+The Flask service is publicly reachable in this Blueprint because it is a
+Render web service. It exposes only the recommendation and health endpoints;
+the Gemini key and Atlas connection string remain on the Node server and are
+never sent to browser code. Free Render services can sleep while idle, so the
+first request after inactivity may be slow.
 
-Move to ML folder:
+## Environment variables
 
-```bash
-cd ml
-```
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `MONGODB_URI` | Yes for the backend | MongoDB Atlas connection string |
+| `GEMINI_API_KEY` | For AI meal plans | Server-side credential for Gemini |
+| `ML_SERVICE_URL` | Yes for recipe APIs | Base URL of the Flask service |
+| `PORT` | Set by Render | Listening port for each deployed service |
 
-Install Python dependencies:
+`backend/config/database.js` also accepts the legacy `MONGO_URI` name for
+existing local environments, but new deployments should use `MONGODB_URI`.
 
-```bash
-pip install -r requirements.txt
-```
+## Rotating exposed credentials
 
-Run ML service:
-
-```bash
-python ml_service.py
-```
-
----
-
-# 💻 Frontend Setup
-
-Move to frontend directory (root if frontend exists there):
-
-```bash
-npm install
-```
-
-Run frontend:
-
-```bash
-npm start
-```
-
----
-
-# 🔄 Application Workflow
-
-1. User enters available ingredients
-2. Frontend sends request to backend API
-3. Backend communicates with ML service
-4. ML model processes ingredient similarity
-5. Recommended recipes are returned
-6. Results displayed on frontend
-
----
-
-# 🧠 Machine Learning Logic
-
-The recommendation system:
-
-* Cleans and preprocesses food dataset
-* Matches ingredients using similarity techniques
-* Suggests the most relevant recipes
-* Optimizes recommendations based on available inputs
-
-Dataset used:
-
-```bash
-cleaned_indian_food_1.csv
-```
-
----
-
-# 📌 API Architecture
-
-```bash
-Frontend (React)
-        ↓
-Backend API (Node.js/Express)
-        ↓
-Python ML Service
-        ↓
-Recommendation Engine
-```
-
----
-
-# 📦 Important Dependencies
-
-## Backend
-
-```bash
-express
-cors
-dotenv
-nodemon
-```
-
-## ML
-
-```bash
-pandas
-numpy
-scikit-learn
-flask
-```
-
----
-
-# 🔐 Environment Variables
-
-Example `.env`
-
-```env
-PORT=5000
-ML_SERVICE_URL=http://localhost:8000
-```
-
----
-
-# 🚀 Future Improvements
-
-* Nutritional analysis
-* Meal planning system
-* Image-based ingredient detection
-* Voice input support
+A Gemini API key was previously embedded in tracked backend source. Removing it
+from the current code does not remove it from earlier Git commits. Revoke that
+key in Google AI Studio and create a replacement before deploying; do not reuse
+the exposed key. If any Atlas credentials were ever committed or shared, rotate
+those as well.

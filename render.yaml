@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: whats-in-my-fridge-ml
+    runtime: python
+    rootDir: ml
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT ml_service:app
+    healthCheckPath: /health
+
+  - type: web
+    name: whats-in-my-fridge
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.16.0
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ML_SERVICE_URL
+        value: https://whats-in-my-fridge-ml.onrender.com

@@ -269,8 +269,7 @@
             });
 
             const data = await res.json();
-
-            addMessage(data.plan, "ai");
+            addMessage(data.plan || data.error || "Unable to generate a meal plan.", "ai");
         };
     </script>
 </html>

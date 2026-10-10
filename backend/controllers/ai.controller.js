@@ -10,6 +10,7 @@ export const generateMealPlan = async (req, res) => {
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ plan: "Error generating plan" });
+        const status = err.message === "GEMINI_API_KEY is required to generate meal plans" ? 503 : 500;
+        res.status(status).json({ error: "Error generating meal plan" });
     }
 };

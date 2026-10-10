@@ -1,10 +1,12 @@
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 import re
+from pathlib import Path
 
 # Load cleaned dataset once
 # print("Loading dataset...")
-df = pd.read_csv("./cleaned_indian_food_1.csv")
+DATASET_PATH = Path(__file__).resolve().with_name("cleaned_indian_food_1.csv")
+df = pd.read_csv(DATASET_PATH)
 # print("Dataset loaded")
 
 vectorizer = TfidfVectorizer(stop_words="english")
@@ -41,7 +43,7 @@ def recommend_recipe_precise(user_ingredients, top_n=10):
     if not results:
         return pd.DataFrame()
 
-    results = sorted(results, key=lambda x: (x[2], -x[1]))
+    results = sorted(results, key=lambda x: (x[2], -x[1]))[:top_n]
     indices = [r[0] for r in results]
     rec = df.iloc[indices][["TranslatedRecipeName", "CleanedIngredients", "Cuisine", "Course", "Diet", "RecipeSteps","ImageURL"]].copy()
     rec["ExtraIngredientsCount"] = [r[2] for r in results]
