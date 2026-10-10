@@ -85,11 +85,16 @@
                             <!-- Image -->
                             <a href="/api/search/recipe/<%= encodeURIComponent(recipe.TranslatedRecipeName) %>">
                             <div class="relative h-64 overflow-hidden">
+                                
                                 <img 
-                                src="<%= recipe.ImageURL %>" 
-                                alt="<%= recipe.TranslatedRecipeName %>"
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    src="<%= recipe.ImageURL %>" 
+                                    alt="<%= recipe.TranslatedRecipeName %>"
+                                    referrerpolicy="no-referrer"
+                                    loading="lazy"
+                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    onerror="this.onerror=null; this.style.display='none';"
                                 />
+
 
                                 <!-- Missing Badge -->
                                 <div class="absolute top-3 left-3 bg-primary text-black text-xs font-bold px-3 py-1 rounded-full shadow">
