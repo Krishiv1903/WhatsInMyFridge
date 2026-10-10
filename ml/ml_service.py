@@ -4,17 +4,38 @@ from model_utils import recommend_recipe_precise, get_recipe_steps, get_similar_
 
 app = Flask(__name__)
 
+
 @app.route("/recommend", methods=["POST"])
 def recommend():
     data = request.get_json(silent=True) or {}
-    ingredients = data.get("ingredients", "").strip()
+    ingredients = data.get("ingredients", "")
 
-    recommendations = recommend_recipe_precise(ingredients)
+    if isinstance(ingredients, list):
+        ingredients = ", ".join(
+            str(item).strip()
+            for item in ingredients
+            if str(item).strip()
+        )
+    elif isinstance(ingredients, str):
+        ingredients = ingredients.strip()
+    else:
+        return jsonify({"error": "ingredients must be a string or list"}), 400
 
-    if recommendations.empty:
-        return jsonify([])
+    if not ingredients:
+        return jsonify({"error": "Please provide ingredients"}), 400
 
-    return jsonify(recommendations.to_dict(orient="records"))
+    try:
+        recommendations = recommend_recipe_precise(ingredients)
+
+        if recommendations.empty:
+            return jsonify([])
+
+        return jsonify(recommendations.to_dict(orient="records"))
+
+    except Exception:
+        app.logger.exception("Error in /recommend endpoint")
+        return jsonify({"error": "Recommendation failed. Check server logs."}), 500
+
 
 
 @app.route("/recipe/<path:name>", methods=["GET"])
