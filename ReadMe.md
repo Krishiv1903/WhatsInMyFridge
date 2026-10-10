@@ -1,5 +1,7 @@
 # What's In My Fridge
 
+link - https://whatsinmyfridge-backend.onrender.com/
+
 What's In My Fridge is a recipe discovery application built with an Express
 backend, static HTML/EJS pages, a Flask recommendation service, MongoDB Atlas,
 and Gemini-powered meal planning.
